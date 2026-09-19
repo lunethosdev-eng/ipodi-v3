@@ -26,6 +26,10 @@ jobs:
           test -f l10n.yaml
           test -d lib/l10n
           test -f lib/l10n/app_en.arb
+      - name: Android SDK / NDK
+        run: |
+          export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;35.0.0" "ndk;28.2.13676358"
       - name: Dependencies
         run: flutter pub get
       - name: Generate localizations
@@ -51,9 +55,11 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
-      - name: Install Android SDK 36
-        run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
+      - name: Prepare Android SDK
+        run: |
+          export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;35.0.0"
       - uses: gradle/actions/setup-gradle@v4
       - name: Build legacy APK
         working-directory: legacy

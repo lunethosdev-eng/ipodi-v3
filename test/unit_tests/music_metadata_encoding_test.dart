@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:audio_metadata_reader/audio_metadata_reader.dart';
-import 'package:classipod/core/models/music_metadata.dart';
+import 'package:sekaipod/core/models/music_metadata.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

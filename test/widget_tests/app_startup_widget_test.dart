@@ -2,14 +2,14 @@
 
 import 'dart:io';
 
-import 'package:classipod/classipod_app.dart';
-import 'package:classipod/core/models/device_directory.dart';
-import 'package:classipod/core/providers/device_directory_provider.dart';
-import 'package:classipod/core/providers/shared_preferences_with_cache_provider.dart';
-import 'package:classipod/features/app_startup/controllers/app_startup_controller.dart';
-import 'package:classipod/features/app_startup/screens/app_startup_screen.dart';
-import 'package:classipod/features/app_startup/screens/splash_screen.dart';
-import 'package:classipod/features/settings/controller/settings_preferences_controller.dart';
+import 'package:sekaipod/sekaipod_app.dart';
+import 'package:sekaipod/core/models/device_directory.dart';
+import 'package:sekaipod/core/providers/device_directory_provider.dart';
+import 'package:sekaipod/core/providers/shared_preferences_with_cache_provider.dart';
+import 'package:sekaipod/features/app_startup/controllers/app_startup_controller.dart';
+import 'package:sekaipod/features/app_startup/screens/app_startup_screen.dart';
+import 'package:sekaipod/features/app_startup/screens/splash_screen.dart';
+import 'package:sekaipod/features/settings/controller/settings_preferences_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -55,7 +55,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: providerContainer,
-        child: const AppStartupScreen(app: ClassipodApp()),
+        child: const AppStartupScreen(app: SekaiPodApp()),
       ),
     );
     expect(find.byType(CupertinoActivityIndicator), findsOne);
@@ -66,7 +66,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: providerContainer,
-        child: const AppStartupScreen(app: ClassipodApp()),
+        child: const AppStartupScreen(app: SekaiPodApp()),
       ),
     );
     await tester.pumpAndSettle();
@@ -81,7 +81,7 @@ void main() {
             (_) => throw Exception('Test Exception'),
           ),
         ],
-        child: const AppStartupScreen(app: ClassipodApp()),
+        child: const AppStartupScreen(app: SekaiPodApp()),
       ),
     );
     await tester.pumpAndSettle();

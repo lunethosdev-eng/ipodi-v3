@@ -1,9 +1,9 @@
 import 'dart:io';
 
-import 'package:classipod/core/models/device_directory.dart';
-import 'package:classipod/core/models/music_metadata.dart';
-import 'package:classipod/core/providers/device_directory_provider.dart';
-import 'package:classipod/core/repositories/metadata_reader_repository.dart';
+import 'package:sekaipod/core/models/device_directory.dart';
+import 'package:sekaipod/core/models/music_metadata.dart';
+import 'package:sekaipod/core/providers/device_directory_provider.dart';
+import 'package:sekaipod/core/repositories/metadata_reader_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
