@@ -1,0 +1,16 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.sekai.sekaipod.legacy'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'com.sekai.sekaipod.legacy'
+        minSdk 16
+        targetSdk 28
+        versionCode 1
+        versionName '1.0.0'
+    }
+}

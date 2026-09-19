@@ -1,0 +1,66 @@
+name: Build SekaiPod Android APKs
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  modern:
+    name: Modern APK (Android 7.0 / API 24 → Android 16 / API 36)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.7'
+          channel: stable
+          cache: true
+      - name: Verify localization files
+        run: |
+          test -f pubspec.yaml
+          test -f l10n.yaml
+          test -d lib/l10n
+          test -f lib/l10n/app_en.arb
+      - name: Dependencies
+        run: flutter pub get
+      - name: Generate localizations
+        run: flutter gen-l10n
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+      - name: Build modern APK
+        run: flutter build apk --release --flavor production
+      - name: Rename
+        run: cp build/app/outputs/flutter-apk/app-production-release.apk SekaiPod-Android7-16.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SekaiPod-Android7-to-16
+          path: SekaiPod-Android7-16.apk
+
+  legacy:
+    name: Legacy APK (Android 4.1 / API 16 → Android 6 / API 23)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android SDK 36
+        run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build legacy APK
+        working-directory: legacy
+        run: gradle :app:assembleRelease --no-daemon
+      - name: Rename
+        run: cp legacy/app/build/outputs/apk/release/app-release.apk SekaiPod-Legacy-Android4.1-6.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SekaiPod-Android4.1-to-6
+          path: SekaiPod-Legacy-Android4.1-6.apk
