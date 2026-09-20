@@ -197,6 +197,15 @@ final routerProvider = Provider(
             pageBuilder: (context, state) =>
                 const CupertinoPage(child: OnboardingScreen()),
           ),
+          GoRoute(
+            path: Routes.addMusic.toString(),
+            name: Routes.addMusic.name,
+            pageBuilder: (context, state) => CupertinoPage(
+              child: AddMusicScreen(
+                fromOnboarding: state.uri.queryParameters['onboarding'] == '1',
+              ),
+            ),
+          ),
           ShellRoute(
             parentNavigatorKey: rootNavigatorKey,
             navigatorKey: menuNavigatorKey,
@@ -335,13 +344,6 @@ final routerProvider = Provider(
                     pageBuilder: (context, state) =>
                         const CupertinoPage(child: MusicMenuScreen()),
                     routes: [
-                      GoRoute(
-                        path: Routes.addMusic.name,
-                        name: Routes.addMusic.name,
-                        parentNavigatorKey: rootNavigatorKey,
-                        pageBuilder: (context, state) =>
-                            CupertinoPage(child: AddMusicScreen(fromOnboarding: state.uri.queryParameters['onboarding'] == '1')),
-                      ),
                       GoRoute(
                         path: Routes.coverFlow.name,
                         name: Routes.coverFlow.name,

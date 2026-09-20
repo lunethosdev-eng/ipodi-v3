@@ -18,8 +18,36 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Future<void> _openHomeSettings() async {
     try {
       await const MethodChannel('com.sekai.sekaipod/system').invokeMethod('openHomeSettings');
-    } on PlatformException {
-      // The user can still skip this step and choose the launcher later.
+    } on PlatformException catch (error) {
+      if (!mounted) return;
+      showCupertinoDialog(
+        context: context,
+        builder: (_) => CupertinoAlertDialog(
+          title: const Text('Choose your Home app'),
+          content: Text('Android did not open the Home app selector. You can choose SekaiPod later in Settings.\n\n$error'),
+          actions: [
+            CupertinoDialogAction(
+              child: const Text('OK'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      showCupertinoDialog(
+        context: context,
+        builder: (_) => CupertinoAlertDialog(
+          title: const Text('Could not open Home settings'),
+          content: Text('$error'),
+          actions: [
+            CupertinoDialogAction(
+              child: const Text('OK'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        ),
+      );
     }
   }
 
