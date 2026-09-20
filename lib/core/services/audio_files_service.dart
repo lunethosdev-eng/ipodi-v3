@@ -15,12 +15,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
-final sekaiMusicApiProvider = Provider<SekaiMusicApi>((ref) {
-  final api = SekaiMusicApi();
-  ref.onDispose(api.dispose);
-  return api;
-});
-
 final audioFilesServiceProvider =
     AsyncNotifierProvider<
       AudioFilesServiceNotifier,

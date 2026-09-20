@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:sekaipod/core/models/music_metadata.dart';
 
@@ -8,6 +10,12 @@ import 'package:sekaipod/core/models/music_metadata.dart';
 ///
 /// The launcher intentionally loads the complete catalog with one request and
 /// keeps the parsed result in memory for the current app session.
+final sekaiMusicApiProvider = Provider<SekaiMusicApi>((ref) {
+  final api = SekaiMusicApi();
+  ref.onDispose(api.dispose);
+  return api;
+});
+
 class SekaiMusicApi {
   SekaiMusicApi({http.Client? client}) : _client = client ?? http.Client();
 
@@ -22,16 +30,29 @@ class SekaiMusicApi {
       return List.unmodifiable(_catalogCache!);
     }
 
-    final response = await _client.get(
-      Uri.parse(catalogUrl),
-      headers: const {
-        'Accept': 'application/json',
-        'Cache-Control': 'no-cache',
-      },
-    ).timeout(const Duration(seconds: 30));
+    http.Response? response;
+    Object? lastError;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      try {
+        response = await _client.get(
+          Uri.parse(catalogUrl),
+          headers: const {
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache',
+          },
+        ).timeout(const Duration(seconds: 90));
+        if (response.statusCode >= 200 && response.statusCode < 300) break;
+        lastError = Exception('Sekai Music returned HTTP ${response.statusCode}.');
+      } catch (error) {
+        lastError = error;
+      }
+      if (attempt < 2) {
+        await Future<void>.delayed(Duration(seconds: 2 + attempt * 2));
+      }
+    }
 
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception('Sekai Music returned HTTP ${response.statusCode}.');
+    if (response == null || response.statusCode < 200 || response.statusCode >= 300) {
+      throw lastError ?? const SocketException('Sekai Music catalog request failed.');
     }
 
     final decoded = jsonDecode(utf8.decode(response.bodyBytes));

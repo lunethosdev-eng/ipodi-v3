@@ -111,15 +111,15 @@ public class MainActivity extends Activity {
         private Exception error;
 
         @Override protected String doInBackground(Void... ignored) {
-            for (int attempt = 1; attempt <= 2; attempt++) {
+            for (int attempt = 1; attempt <= 3; attempt++) {
                 if (isCancelled()) return null;
                 HttpURLConnection connection = null;
                 BufferedReader reader = null;
                 try {
                     URL url = new URL(CATALOG);
                     connection = (HttpURLConnection) url.openConnection();
-                    connection.setConnectTimeout(30000);
-                    connection.setReadTimeout(60000);
+                    connection.setConnectTimeout(90000);
+                    connection.setReadTimeout(90000);
                     connection.setRequestMethod("GET");
                     connection.setRequestProperty("Accept", "application/json");
                     connection.setRequestProperty("User-Agent", "SekaiPod-Legacy/1.0 Android");
@@ -140,8 +140,8 @@ public class MainActivity extends Activity {
                     return body.toString();
                 } catch (Exception e) {
                     error = e;
-                    if (attempt == 1) {
-                        try { Thread.sleep(2500); } catch (InterruptedException ignoredSleep) { return null; }
+                    if (attempt < 3) {
+                        try { Thread.sleep(3000L * attempt); } catch (InterruptedException ignoredSleep) { return null; }
                     }
                 } finally {
                     try { if (reader != null) reader.close(); } catch (Exception ignoredClose) { }

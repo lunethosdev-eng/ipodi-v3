@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sekaipod/core/models/music_metadata.dart';
-import 'package:sekaipod/core/services/audio_files_service.dart';
 import 'package:sekaipod/core/services/audio_player_service.dart';
 import 'package:sekaipod/core/services/offline_music_service.dart';
 import 'package:sekaipod/core/services/sekai_music_api.dart';
@@ -231,7 +230,7 @@ class _CatalogSongTile extends StatelessWidget {
                 width: 44,
                 height: 44,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const Icon(CupertinoIcons.music_note),
+                errorBuilder: (context, error, stackTrace) => const Icon(CupertinoIcons.music_note),
               ),
             ),
       title: Text(song.getTrackName, maxLines: 1, overflow: TextOverflow.ellipsis),

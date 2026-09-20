@@ -5,7 +5,7 @@ import android.content.Intent
 import android.os.Build
 import android.provider.Settings
 import com.ryanheise.audioservice.AudioServiceActivity
-import io.flutter.embedding.android.FlutterEngine
+import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : AudioServiceActivity() {
