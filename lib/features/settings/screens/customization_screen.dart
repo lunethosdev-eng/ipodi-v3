@@ -48,7 +48,7 @@ class CustomizationScreen extends ConsumerWidget {
                       color: color,
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: selected ? CupertinoColors.black : CupertinoColors.clear,
+                        color: selected ? CupertinoColors.black : CupertinoColors.transparent,
                         width: 3,
                       ),
                     ),

@@ -58,12 +58,11 @@ jobs:
       - name: Prepare Android SDK
         run: |
           export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
-          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
           "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;35.0.0"
       - uses: gradle/actions/setup-gradle@v4
       - name: Build legacy APK
         working-directory: legacy
-        run: gradle :app:assembleRelease --no-daemon
+        run: gradle :app:assembleRelease --no-daemon --stacktrace
       - name: Rename
         run: cp legacy/app/build/outputs/apk/release/app-release.apk SekaiPod-Legacy-Android4.1-6.apk
       - uses: actions/upload-artifact@v4
