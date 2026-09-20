@@ -10,7 +10,6 @@ import 'package:sekaipod/features/music/genres/providers/genres_provider.dart';
 import 'package:sekaipod/features/music/songs/provider/songs_provider.dart';
 import 'package:sekaipod/features/music/playlist/providers/playlists_provider.dart';
 import 'package:sekaipod/core/services/selected_music_service.dart';
-import 'package:sekaipod/features/status_bar/widgets/status_bar.dart';
 import 'package:sekaipod/core/providers/shared_preferences_with_cache_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sekaipod/core/navigation/routes.dart';
@@ -53,7 +52,9 @@ class _AddMusicScreenState extends ConsumerState<AddMusicScreen> {
 
   Future<void> _syncPlayer() async {
     final songs = ref.read(selectedMusicServiceProvider).toList();
-    await ref.read(audioPlayerServiceProvider.notifier).setAudioSource(musicMetadataList: songs);
+    await ref
+        .read(audioPlayerServiceProvider.notifier)
+        .setAudioSource(musicMetadataList: songs);
     ref.invalidate(songsProvider);
     ref.invalidate(albumDetailsProvider);
     ref.invalidate(artistNamesProvider);
@@ -70,9 +71,14 @@ class _AddMusicScreenState extends ConsumerState<AddMusicScreen> {
         showCupertinoDialog(
           context: context,
           builder: (_) => CupertinoAlertDialog(
-            title: const Text('Available offline'),
-            content: const Text('This song is now stored on this device.'),
-            actions: [CupertinoDialogAction(child: const Text('OK'), onPressed: () => Navigator.of(context).pop())],
+            title: const Text('Disponible offline'),
+            content: const Text('Esta canción quedó guardada en el dispositivo.'),
+            actions: [
+              CupertinoDialogAction(
+                child: const Text('OK'),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
           ),
         );
       }
@@ -81,9 +87,18 @@ class _AddMusicScreenState extends ConsumerState<AddMusicScreen> {
       showCupertinoDialog(
         context: context,
         builder: (_) => CupertinoAlertDialog(
-          title: const Text('Offline download unavailable'),
-          content: Text('$e'),
-          actions: [CupertinoDialogAction(child: const Text('OK'), onPressed: () => Navigator.of(context).pop())],
+          title: const Text('Descarga offline no disponible'),
+          content: Text(
+            '$e\n\n'
+            'Las URLs de YouTube/SoundCloud de página no se pueden descargar '
+            'directamente. El servidor debe ofrecer un enlace de audio (stream).',
+          ),
+          actions: [
+            CupertinoDialogAction(
+              child: const Text('OK'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
         ),
       );
     }
@@ -97,8 +112,6 @@ class _AddMusicScreenState extends ConsumerState<AddMusicScreen> {
       await service.add(song);
     }
 
-    // The library selection is the primary action. Rebuilding the audio
-    // queue is secondary and must not make the button appear unresponsive.
     try {
       await _syncPlayer();
     } catch (e) {
@@ -106,11 +119,11 @@ class _AddMusicScreenState extends ConsumerState<AddMusicScreen> {
       showCupertinoDialog<void>(
         context: context,
         builder: (_) => CupertinoAlertDialog(
-          title: const Text('Song saved'),
+          title: const Text('Canción guardada'),
           content: Text(
             selected
-                ? 'The song was removed from My Music. The player could not refresh: $e'
-                : 'The song was added to My Music. The player could not refresh: $e',
+                ? 'Se quitó de Mi Música. El reproductor no pudo refrescar: $e'
+                : 'Se agregó a Mi Música. El reproductor no pudo refrescar: $e',
           ),
           actions: [
             CupertinoDialogAction(
@@ -123,6 +136,17 @@ class _AddMusicScreenState extends ConsumerState<AddMusicScreen> {
     }
   }
 
+  Future<void> _doneOnboarding() async {
+    try {
+      await _syncPlayer();
+    } catch (_) {}
+    await ref
+        .read(sharedPreferencesWithCacheProvider)
+        .requireValue
+        .setBool('sekaipod.onboardingComplete', true);
+    if (context.mounted) context.goNamed(Routes.menu.name);
+  }
+
   @override
   Widget build(BuildContext context) {
     final catalogState = ref.watch(addMusicCatalogProvider);
@@ -130,36 +154,95 @@ class _AddMusicScreenState extends ConsumerState<AddMusicScreen> {
 
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
-        middle: Text(widget.fromOnboarding ? 'Choose your music' : 'Add More Music'),
+        middle: Text(
+          widget.fromOnboarding ? 'Elige tu música' : 'Añadir más música',
+        ),
+        leading: widget.fromOnboarding
+            ? CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: _doneOnboarding,
+                child: const Text('Saltar'),
+              )
+            : null,
         trailing: widget.fromOnboarding
             ? CupertinoButton(
                 padding: EdgeInsets.zero,
-                onPressed: () async {
-                  await _syncPlayer();
-                  await ref.read(sharedPreferencesWithCacheProvider).requireValue.setBool('sekaipod.onboardingComplete', true);
-                  if (context.mounted) context.goNamed(Routes.menu.name);
-                },
-                child: const Text('Done'),
+                onPressed: _doneOnboarding,
+                child: const Text('Listo'),
               )
-            : null,
+            : CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.goNamed(Routes.menu.name);
+                  }
+                },
+                child: const Text('Cerrar'),
+              ),
       ),
       child: SafeArea(
         child: catalogState.when(
-          loading: () => const Center(child: CupertinoActivityIndicator()),
+          loading: () => const Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CupertinoActivityIndicator(),
+                SizedBox(height: 12),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24),
+                  child: Text(
+                    'Cargando catálogo de Sekai Music…\n'
+                    'Si el servidor está dormido puede tardar ~30 s',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: CupertinoColors.secondaryLabel,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
           error: (error, _) => Center(
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('Could not load Sekai Music.'),
+                  const Icon(
+                    CupertinoIcons.wifi_exclamationmark,
+                    size: 48,
+                    color: CupertinoColors.systemOrange,
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'No se pudo cargar Sekai Music',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  ),
                   const SizedBox(height: 8),
-                  Text('$error', textAlign: TextAlign.center),
+                  Text(
+                    '$error\n\n'
+                    'Si usas Render free, el servidor se duerme. '
+                    'Espera unos segundos y pulsa Reintentar.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: CupertinoColors.secondaryLabel,
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   CupertinoButton.filled(
                     onPressed: () => ref.invalidate(addMusicCatalogProvider),
-                    child: const Text('Retry'),
+                    child: const Text('Reintentar'),
                   ),
+                  if (widget.fromOnboarding) ...[
+                    const SizedBox(height: 8),
+                    CupertinoButton(
+                      onPressed: _doneOnboarding,
+                      child: const Text('Continuar sin catálogo'),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -172,34 +255,46 @@ class _AddMusicScreenState extends ConsumerState<AddMusicScreen> {
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
                   child: CupertinoSearchTextField(
                     controller: _searchController,
-                    placeholder: 'Search songs, artists, albums…',
+                    placeholder: 'Buscar canciones, artistas, géneros…',
                     onChanged: (value) => setState(() => _query = value),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
                   child: Row(
                     children: [
-                      Text('${filtered.length} results'),
+                      Text('${filtered.length} resultados'),
                       const Spacer(),
-                      Text('${selected.length} in My Music'),
+                      Text('${selected.length} en Mi Música'),
                     ],
                   ),
                 ),
                 Expanded(
-                  child: ListView.builder(
-                    itemCount: filtered.length,
-                    itemBuilder: (context, index) {
-                      final song = filtered[index];
-                      final isSelected = selected.any((e) => e.filePath == song.filePath);
-                      return _CatalogSongTile(
-                        song: song,
-                        selected: isSelected,
-                        onTap: () => _toggle(song, isSelected),
-                        onDownload: isSelected ? () => _download(song) : null,
-                      );
-                    },
-                  ),
+                  child: filtered.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'Sin resultados',
+                            style: TextStyle(
+                              color: CupertinoColors.secondaryLabel,
+                            ),
+                          ),
+                        )
+                      : ListView.builder(
+                          itemCount: filtered.length,
+                          itemBuilder: (context, index) {
+                            final song = filtered[index];
+                            final isSelected = selected
+                                .any((e) => e.filePath == song.filePath);
+                            return _CatalogSongTile(
+                              song: song,
+                              selected: isSelected,
+                              onTap: () => _toggle(song, isSelected),
+                              onDownload:
+                                  isSelected ? () => _download(song) : null,
+                            );
+                          },
+                        ),
                 ),
               ],
             );
@@ -216,7 +311,12 @@ class _CatalogSongTile extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback? onDownload;
 
-  const _CatalogSongTile({required this.song, required this.selected, required this.onTap, this.onDownload});
+  const _CatalogSongTile({
+    required this.song,
+    required this.selected,
+    required this.onTap,
+    this.onDownload,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -230,11 +330,20 @@ class _CatalogSongTile extends StatelessWidget {
                 width: 44,
                 height: 44,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => const Icon(CupertinoIcons.music_note),
+                errorBuilder: (context, error, stackTrace) =>
+                    const Icon(CupertinoIcons.music_note),
               ),
             ),
-      title: Text(song.getTrackName, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text(song.getTrackArtistNames ?? 'Unknown Artist', maxLines: 1, overflow: TextOverflow.ellipsis),
+      title: Text(
+        song.getTrackName,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: Text(
+        song.getTrackArtistNames ?? 'Artista desconocido',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -247,7 +356,11 @@ class _CatalogSongTile extends StatelessWidget {
           CupertinoButton(
             padding: EdgeInsets.zero,
             onPressed: onTap,
-            child: Icon(selected ? CupertinoIcons.checkmark_circle_fill : CupertinoIcons.add_circled),
+            child: Icon(
+              selected
+                  ? CupertinoIcons.checkmark_circle_fill
+                  : CupertinoIcons.add_circled,
+            ),
           ),
         ],
       ),

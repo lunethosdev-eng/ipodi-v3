@@ -3,6 +3,7 @@ import 'package:sekaipod/core/extensions/build_context_extensions.dart';
 import 'package:sekaipod/features/settings/controller/settings_preferences_controller.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class DeviceScreen extends ConsumerWidget {
   final Widget child;
@@ -19,8 +20,15 @@ class DeviceScreen extends ConsumerWidget {
 
     final size = MediaQuery.sizeOf(context);
 
+    // Always allow touch on onboarding / add-music so setup buttons work
+    // even if the user previously disabled the touchscreen setting.
+    final location = GoRouterState.of(context).uri.path;
+    final forceTouch =
+        location.contains('onboarding') || location.contains('addMusic');
+    final absorb = !forceTouch && !isTouchScreenEnabled;
+
     return AbsorbPointer(
-      absorbing: !isTouchScreenEnabled,
+      absorbing: absorb,
       child: Container(
         height: Constants.screenHeight + 10,
         width: double.infinity,

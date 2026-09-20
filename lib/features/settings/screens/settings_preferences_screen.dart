@@ -13,6 +13,7 @@ import 'package:sekaipod/features/settings/models/settings_preferences_model.dar
 import 'package:sekaipod/features/settings/widgets/settings_list_tile.dart';
 import 'package:sekaipod/features/status_bar/widgets/status_bar.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -35,6 +36,7 @@ enum _SettingsDisplayItems {
   immersiveMode,
   showAppTutorial,
   rescanMusicFiles,
+  setDefaultLauncher,
   excludeDirectories,
   resetSettings,
   donate;
@@ -75,6 +77,8 @@ enum _SettingsDisplayItems {
         return context.localization.showAppTutorialSettingTitle;
       case rescanMusicFiles:
         return context.localization.rescanMusicFilesSettingTitle;
+      case setDefaultLauncher:
+        return 'Establecer como launcher';
       case resetSettings:
         return context.localization.resetSettingsTitle;
       case excludeDirectories:
@@ -181,6 +185,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         await ref
             .read(settingsPreferencesControllerProvider.notifier)
             .rescanMusicFiles();
+        break;
+      case _SettingsDisplayItems.setDefaultLauncher:
+        try {
+          await const MethodChannel('com.sekai.sekaipod/system')
+              .invokeMethod<bool>('openHomeSettings');
+        } catch (e) {
+          // ignore – system may still open settings
+        }
         break;
       case _SettingsDisplayItems.excludeDirectories:
         context.goNamed(Routes.excludeDirectories.name);
@@ -314,6 +326,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       case _SettingsDisplayItems.rescanMusicFiles:
         ref.read(splitScreenControllerProvider.notifier).changeSplitScreenType =
             SplitScreenType.rescanMusicFiles;
+        break;
+      case _SettingsDisplayItems.setDefaultLauncher:
+        ref.read(splitScreenControllerProvider.notifier).changeSplitScreenType =
+            SplitScreenType.settings;
         break;
       case _SettingsDisplayItems.excludeDirectories:
         ref.read(splitScreenControllerProvider.notifier).changeSplitScreenType =

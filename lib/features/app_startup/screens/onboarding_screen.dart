@@ -15,6 +15,7 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int page = 0;
   bool _openingHomeSettings = false;
+  bool _openingSongs = false;
 
   Future<void> _openHomeSettings() async {
     if (_openingHomeSettings) return;
@@ -66,19 +67,31 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Future<void> _openChooseSongs() async {
-    // Use named route + queryParameters so GoRouter always resolves correctly
-    // even when called from inside the DeviceFrame / ShellRoute.
+    if (_openingSongs) return;
+    setState(() => _openingSongs = true);
     try {
-      await context.pushNamed(
-        Routes.addMusic.name,
-        queryParameters: const {'onboarding': '1'},
-      );
-    } catch (e) {
-      if (!mounted) return;
-      _showActionMessage(
-        'No se pudo abrir la pantalla de canciones: $e\n\n'
-        'Prueba de nuevo o reinicia la app.',
-      );
+      // go() always works even inside DeviceFrame shell
+      ref.read(routerProvider).go('/addMusic?onboarding=1');
+    } catch (e1) {
+      try {
+        if (!mounted) return;
+        context.go('/addMusic?onboarding=1');
+      } catch (e2) {
+        try {
+          if (!mounted) return;
+          await context.push('/addMusic?onboarding=1');
+        } catch (e3) {
+          if (mounted) {
+            _showActionMessage(
+              'No se pudo abrir la pantalla de canciones.\n\n'
+              'Detalle: $e3\n\n'
+              'Prueba reiniciar o ve a Música → Añadir después del onboarding.',
+            );
+          }
+        }
+      }
+    } finally {
+      if (mounted) setState(() => _openingSongs = false);
     }
   }
 
@@ -103,7 +116,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         icon: CupertinoIcons.house,
         title: 'Ponlo como pantalla de inicio',
         text:
-            'Puedes configurar SekaiPod como tu app de inicio de Android. También puedes saltarte este paso y hacerlo más tarde.',
+            'Puedes configurar SekaiPod como tu app de inicio de Android. También puedes saltarte este paso y hacerlo más tarde en Ajustes.',
         action: CupertinoButton.filled(
           onPressed: _openingHomeSettings ? null : _openHomeSettings,
           child: _openingHomeSettings
@@ -115,10 +128,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         icon: CupertinoIcons.music_albums,
         title: 'Elige tu música',
         text:
-            'El catálogo de Sekai Music solo sirve para descubrir. Solo las canciones que agregues se guardan en Mi Música.',
+            'El catálogo de Sekai Music solo sirve para descubrir. Solo las canciones que agregues se guardan en Mi Música.\n\nPuedes saltar y elegir después desde el menú Música.',
         action: CupertinoButton.filled(
-          onPressed: _openChooseSongs,
-          child: const Text('Elegir canciones'),
+          onPressed: _openingSongs ? null : _openChooseSongs,
+          child: _openingSongs
+              ? const CupertinoActivityIndicator(color: CupertinoColors.white)
+              : const Text('Elegir canciones'),
         ),
       ),
     ];
@@ -189,7 +204,7 @@ class _IntroPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(28),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

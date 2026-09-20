@@ -159,7 +159,7 @@ class SekaiMusicApi {
       trackNumber: _int(metadata, const ['trackNumber', 'track', 'trackIndex']),
       albumLength: _int(metadata, const ['albumLength', 'trackTotal']),
       year: _int(metadata, const ['year']),
-      genres: _strings(_value(metadata, const ['genres', 'genre'])),
+      genres: _strings(_value(metadata, const ['genres', 'genre']) ?? _value(item, const ['genres', 'genre'])),
       discNumber: _int(metadata, const ['discNumber', 'disc']),
       mimeType: _string(metadata, const ['mimeType', 'mime', 'contentType']),
       trackDuration: _durationMs(metadata, item),
