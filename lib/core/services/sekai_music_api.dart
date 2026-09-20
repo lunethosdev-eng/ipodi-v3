@@ -100,10 +100,12 @@ class SekaiMusicApi {
       'url',
       'soundcloudUrl',
       'soundcloud',
+      'audio_url',
       'youtubeAudioUrl',
+      'audioURL',
     ]);
 
-    if (title == null || audioUrl == null || !audioUrl.startsWith('http')) {
+    if (title == null) {
       return null;
     }
 
@@ -119,10 +121,14 @@ class SekaiMusicApi {
       'thumbnailUrl',
       'thumbnail',
       'image',
+      'cover_url',
+      'coverURL',
     ]);
 
-    final lyrics = _string(item, const ['lyrics', 'lyric', 'text']) ??
-        _string(metadata, const ['lyrics', 'lyric', 'text']);
+    final lyrics = _lyrics(item['lyrics']) ??
+        _lyrics(metadata['lyrics']) ??
+        _string(item, const ['lyric', 'text']) ??
+        _string(metadata, const ['lyric', 'text']);
 
     return MusicMetadata(
       trackName: title,
@@ -217,6 +223,15 @@ class SekaiMusicApi {
     return const [];
   }
 
+  String? _lyrics(dynamic value) {
+    if (value is List) {
+      final lines = value.map((e) => e.toString()).where((e) => e.trim().isNotEmpty);
+      return lines.isEmpty ? null : lines.join('\n');
+    }
+    if (value is String && value.trim().isNotEmpty) return value.trim();
+    return null;
+  }
+
   String? _findUrl(Map<String, dynamic> map, List<String> preferredKeys) {
     for (final key in preferredKeys) {
       final found = _findValue(map[key]);
@@ -237,7 +252,7 @@ class SekaiMusicApi {
   String? _findValue(dynamic value) {
     if (value is String && value.startsWith('http')) return value;
     if (value is Map) {
-      for (final key in const ['url', 'audioUrl', 'streamUrl', 'src', 'href']) {
+      for (final key in const ['url', 'audioUrl', 'audio_url', 'streamUrl', 'stream_url', 'src', 'href']) {
         final nested = value[key];
         if (nested is String && nested.startsWith('http')) return nested;
       }

@@ -11,6 +11,7 @@ import 'package:sekaipod/core/navigation/routes.dart';
 import 'package:sekaipod/features/device/models/device_action.dart';
 import 'package:sekaipod/features/device/services/device_buttons_service_provider.dart';
 import 'package:sekaipod/features/settings/controller/settings_preferences_controller.dart';
+import 'package:sekaipod/features/settings/controller/customization_controller.dart';
 import 'package:sekaipod/features/settings/models/click_wheel_sensitivity.dart';
 import 'package:sekaipod/features/settings/models/click_wheel_size.dart';
 import 'package:sekaipod/features/settings/models/device_color.dart';
@@ -109,6 +110,7 @@ class _DeviceControlsState extends ConsumerState<DeviceControls> {
       ),
     );
     final deviceColorStyle = deviceColor.style;
+    final customAccent = ref.watch(customizationControllerProvider.select((e) => e.accentColor));
     final clickWheelSize = ref.watch(
       settingsPreferencesControllerProvider.select(
         (settings) => settings.clickWheelSize,
@@ -224,7 +226,7 @@ class _DeviceControlsState extends ConsumerState<DeviceControls> {
                           context.localization.menuButtonText,
                           key: menuButtonGlobalKey,
                           style: TextStyle(
-                            color: deviceColorStyle.buttonAccentColor,
+                            color: customAccent,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
@@ -258,7 +260,7 @@ class _DeviceControlsState extends ConsumerState<DeviceControls> {
                               child: CustomPaint(
                                 size: const Size(20, 10),
                                 painter: PreviousButtonCustomPainter(
-                                  color: deviceColorStyle.buttonIconColor,
+                                  color: customAccent,
                                 ),
                               ),
                             ),
@@ -321,7 +323,7 @@ class _DeviceControlsState extends ConsumerState<DeviceControls> {
                               child: CustomPaint(
                                 size: const Size(20, 10),
                                 painter: NextButtonCustomPainter(
-                                  color: deviceColorStyle.buttonIconColor,
+                                  color: customAccent,
                                 ),
                               ),
                             ),
@@ -344,7 +346,7 @@ class _DeviceControlsState extends ConsumerState<DeviceControls> {
                           key: playPauseButtonGlobalKey,
                           size: const Size(26, 12),
                           painter: PlayPauseButtonCustomPainter(
-                            color: deviceColorStyle.buttonIconColor,
+                            color: customAccent,
                           ),
                         ),
                       ),

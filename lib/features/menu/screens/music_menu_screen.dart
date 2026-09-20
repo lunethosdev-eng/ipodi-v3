@@ -4,12 +4,14 @@ import 'package:sekaipod/core/extensions/build_context_extensions.dart';
 import 'package:sekaipod/core/navigation/routes.dart';
 import 'package:sekaipod/core/widgets/display_list_tile.dart';
 import 'package:sekaipod/features/custom_screen_elements/custom_screen.dart';
+import 'package:sekaipod/features/menu/controller/split_screen_controller.dart';
 import 'package:sekaipod/features/status_bar/widgets/status_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 enum _MusicListDisplayItems {
+  addMore,
   coverFlow,
   playlists,
   artists,
@@ -20,6 +22,8 @@ enum _MusicListDisplayItems {
 
   String title(BuildContext context) {
     switch (this) {
+      case addMore:
+        return 'Add More Music';
       case coverFlow:
         return context.localization.coverFlowScreenTitle;
       case playlists:
@@ -65,6 +69,11 @@ class _MusicMenuScreenState extends ConsumerState<MusicMenuScreen>
       () => selectedDisplayItem = displayItems.indexOf(musicDisplayItem),
     );
     switch (musicDisplayItem) {
+      case _MusicListDisplayItems.addMore:
+        unawaited(ref.read(splitScreenViewControllerProvider).closeSplitView());
+        await context.pushNamed(Routes.addMusic.name);
+        unawaited(ref.read(splitScreenViewControllerProvider).openSplitView());
+        break;
       case _MusicListDisplayItems.coverFlow:
         unawaited(ref.read(splitScreenViewControllerProvider).closeSplitView());
         await context.pushNamed(

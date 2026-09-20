@@ -3,6 +3,7 @@ import 'package:sekaipod/core/extensions/build_context_extensions.dart';
 import 'package:sekaipod/core/models/music_metadata.dart';
 import 'package:sekaipod/core/navigation/page_not_found_screen.dart';
 import 'package:sekaipod/features/app_startup/screens/splash_screen.dart';
+import 'package:sekaipod/features/app_startup/screens/onboarding_screen.dart';
 import 'package:sekaipod/features/custom_screen_elements/custom_scroll_behavior.dart';
 import 'package:sekaipod/features/custom_screen_elements/options_modal_page.dart';
 import 'package:sekaipod/features/device/widgets/device_frame.dart';
@@ -13,6 +14,7 @@ import 'package:sekaipod/features/music/album/models/album_model.dart';
 import 'package:sekaipod/features/music/album/screens/album_more_options_modal.dart';
 import 'package:sekaipod/features/music/album/screens/album_selection_screen.dart';
 import 'package:sekaipod/features/music/album/screens/album_songs_screen.dart';
+import 'package:sekaipod/features/music/add_music/add_music_screen.dart';
 import 'package:sekaipod/features/music/artists/screens/artist_albums_screen.dart';
 import 'package:sekaipod/features/music/artists/screens/artists_selection_screen.dart';
 import 'package:sekaipod/features/music/cover_flow/screens/cover_flow_album_selection_screen.dart';
@@ -32,6 +34,7 @@ import 'package:sekaipod/features/now_playing/screen/now_playing_screen.dart';
 import 'package:sekaipod/features/settings/controller/settings_preferences_controller.dart';
 import 'package:sekaipod/features/settings/screens/about_screen.dart';
 import 'package:sekaipod/features/settings/screens/device_color_selection_screen.dart';
+import 'package:sekaipod/features/settings/screens/customization_screen.dart';
 import 'package:sekaipod/features/settings/screens/exclude_directories_screen.dart';
 import 'package:sekaipod/features/settings/screens/language_selection_screen.dart';
 import 'package:sekaipod/features/settings/screens/settings_preferences_screen.dart';
@@ -42,16 +45,19 @@ import 'package:go_router/go_router.dart';
 
 enum Routes {
   splash,
+  onboarding,
   menu,
   settings,
   about,
   language,
   deviceColor,
+  customization,
   excludeDirectories,
   nowPlaying,
   nowPlayingMoreOptions,
   sleepTimer,
   musicMenu,
+  addMusic,
   coverFlow,
   coverFlowSelection,
   artists,
@@ -82,6 +88,8 @@ enum Routes {
     switch (this) {
       case splash:
         return "";
+      case onboarding:
+        return 'Welcome';
       case menu:
         return context.localization.menuScreenTitle;
       case settings:
@@ -92,6 +100,8 @@ enum Routes {
         return context.localization.languageScreenTitle;
       case deviceColor:
         return context.localization.deviceColorSettingTitle;
+      case customization:
+        return 'Customize SekaiPod';
       case excludeDirectories:
         return context.localization.excludeDirectoriesScreenTitle;
       case nowPlaying:
@@ -102,6 +112,8 @@ enum Routes {
         return context.localization.sleepTimerTitle;
       case musicMenu:
         return context.localization.musicMenuScreenTitle;
+      case addMusic:
+        return 'Add More Music';
       case coverFlow:
         return context.localization.coverFlowScreenTitle;
       case coverFlowSelection:
@@ -179,6 +191,12 @@ final routerProvider = Provider(
             pageBuilder: (context, state) =>
                 const CupertinoPage(child: SplashScreen()),
           ),
+          GoRoute(
+            path: Routes.onboarding.toString(),
+            name: Routes.onboarding.name,
+            pageBuilder: (context, state) =>
+                const CupertinoPage(child: OnboardingScreen()),
+          ),
           ShellRoute(
             parentNavigatorKey: rootNavigatorKey,
             navigatorKey: menuNavigatorKey,
@@ -230,6 +248,14 @@ final routerProvider = Provider(
                         parentNavigatorKey: menuNavigatorKey,
                         pageBuilder: (context, state) => const CupertinoPage(
                           child: DeviceColorSelectionScreen(),
+                        ),
+                      ),
+                      GoRoute(
+                        path: Routes.customization.name,
+                        name: Routes.customization.name,
+                        parentNavigatorKey: menuNavigatorKey,
+                        pageBuilder: (context, state) => const CupertinoPage(
+                          child: CustomizationScreen(),
                         ),
                       ),
                       GoRoute(
@@ -309,6 +335,13 @@ final routerProvider = Provider(
                     pageBuilder: (context, state) =>
                         const CupertinoPage(child: MusicMenuScreen()),
                     routes: [
+                      GoRoute(
+                        path: Routes.addMusic.name,
+                        name: Routes.addMusic.name,
+                        parentNavigatorKey: rootNavigatorKey,
+                        pageBuilder: (context, state) =>
+                            CupertinoPage(child: AddMusicScreen(fromOnboarding: state.uri.queryParameters['onboarding'] == '1')),
+                      ),
                       GoRoute(
                         path: Routes.coverFlow.name,
                         name: Routes.coverFlow.name,

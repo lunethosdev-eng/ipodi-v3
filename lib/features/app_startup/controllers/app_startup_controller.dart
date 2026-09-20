@@ -19,10 +19,8 @@ import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 final appStartupControllerProvider = FutureProvider<void>((ref) async {
   await Future.wait([
     if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) ...[
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown,
-      ]),
+      // Do not lock orientation: foldables (Z Fold/Flip), tablets and landscape phones
+      // should be able to resize the iPod shell naturally.
       JustAudioBackground.init(
         androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
         androidNotificationChannelName: 'SekaiPod Audio playback',
@@ -38,6 +36,7 @@ final appStartupControllerProvider = FutureProvider<void>((ref) async {
   ]);
   Hive.registerAdapters();
   await Hive.openBox<MusicMetadata>(Constants.metadataBoxName);
+  await Hive.openBox<MusicMetadata>(Constants.selectedMusicBoxName);
   await Hive.openBox<PlaylistModel>(Constants.playlistBoxName);
   await Hive.openBox<ExcludeDirectoryModel>(
     Constants.excludedDirectoriesBoxName,

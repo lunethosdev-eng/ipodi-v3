@@ -6,6 +6,7 @@ import 'package:sekaipod/core/constants/constants.dart';
 import 'package:sekaipod/core/models/music_metadata.dart';
 import 'package:sekaipod/core/providers/device_directory_provider.dart';
 import 'package:sekaipod/core/services/sekai_music_api.dart';
+import 'package:sekaipod/core/services/selected_music_service.dart';
 import 'package:sekaipod/core/repositories/metadata_reader_repository.dart';
 import 'package:sekaipod/features/settings/controller/settings_preferences_controller.dart';
 import 'package:file_picker/file_picker.dart';
@@ -37,8 +38,10 @@ class AudioFilesServiceNotifier
     state = const AsyncLoading();
     try {
       if (ref.read(settingsPreferencesControllerProvider).fetchOnlineMusic) {
-        final catalog = await ref.read(sekaiMusicApiProvider).getCatalog();
-        return UnmodifiableListView(catalog);
+        // The remote catalog is only a discovery source. The user's library
+        // contains only songs they explicitly selected.
+        final selected = ref.read(selectedMusicServiceProvider);
+        return UnmodifiableListView(selected);
       }
       // Fetch metadata from local files
       else {
@@ -108,8 +111,9 @@ class AudioFilesServiceNotifier
           return UnmodifiableListView(metadataBox.values);
         }
       }
-    } catch (e) {
-      return UnmodifiableListView([]);
+    } catch (e, stackTrace) {
+      debugPrint('[SekaiPod] Audio library error: $e\n$stackTrace');
+      rethrow;
     }
   }
 }

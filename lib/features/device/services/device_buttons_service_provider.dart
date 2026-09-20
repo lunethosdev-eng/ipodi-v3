@@ -3,8 +3,10 @@ import 'dart:io';
 import 'package:sekaipod/core/services/audio_player_service.dart';
 import 'package:sekaipod/features/device/models/device_action.dart';
 import 'package:sekaipod/features/settings/controller/settings_preferences_controller.dart';
+import 'package:sekaipod/features/settings/controller/customization_controller.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vibration/vibration.dart';
 
@@ -14,8 +16,12 @@ final deviceButtonsServiceProvider =
     );
 
 class DeviceButtonsServiceNotifier extends Notifier<DeviceAction?> {
+  late final AudioPlayer _uiSoundPlayer;
+
   @override
   DeviceAction? build() {
+    _uiSoundPlayer = AudioPlayer();
+    ref.onDispose(_uiSoundPlayer.dispose);
     return null;
   }
 
@@ -27,8 +33,14 @@ class DeviceButtonsServiceNotifier extends Notifier<DeviceAction?> {
   }
 
   Future<void> clickWheelSound() async {
-    if (!kIsWeb &&
-        ref.read(settingsPreferencesControllerProvider).clickWheelSound) {
+    if (kIsWeb || !ref.read(settingsPreferencesControllerProvider).clickWheelSound) return;
+    final soundName = ref.read(customizationControllerProvider).clickSound;
+    final asset = 'assets/sounds/$soundName.wav';
+    try {
+      await _uiSoundPlayer.stop();
+      await _uiSoundPlayer.setAsset(asset);
+      await _uiSoundPlayer.play();
+    } catch (_) {
       await SystemSound.play(SystemSoundType.click);
     }
   }

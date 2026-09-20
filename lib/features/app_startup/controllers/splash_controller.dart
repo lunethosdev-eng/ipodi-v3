@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:sekaipod/core/navigation/routes.dart';
 import 'package:sekaipod/core/providers/filtered_audio_files_provider.dart';
+import 'package:sekaipod/core/providers/shared_preferences_with_cache_provider.dart';
 import 'package:sekaipod/core/services/audio_player_service.dart';
 import 'package:sekaipod/features/music/album/providers/album_details_provider.dart';
 import 'package:sekaipod/features/music/artists/providers/artist_names_provider.dart';
@@ -71,8 +72,11 @@ class SplashControllerNotifier extends AsyncNotifier<void> {
     // Load the playlists
     ref.read(playlistsProvider.notifier).refreshProvider();
 
-    // Navigate to the menu screen
-    ref.read(routerProvider).goNamed(Routes.menu.name);
+    final prefs = ref.read(sharedPreferencesWithCacheProvider).requireValue;
+    final onboardingComplete = prefs.getBool('sekaipod.onboardingComplete') ?? false;
+    ref.read(routerProvider).goNamed(
+      onboardingComplete ? Routes.menu.name : Routes.onboarding.name,
+    );
   }
 }
 
