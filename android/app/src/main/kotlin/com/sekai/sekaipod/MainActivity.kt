@@ -19,27 +19,15 @@ class MainActivity : AudioServiceActivity() {
                 when (call.method) {
                     "openHomeSettings" -> {
                         try {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                val roleManager = getSystemService(RoleManager::class.java)
-                                if (roleManager != null && roleManager.isRoleAvailable(RoleManager.ROLE_HOME)) {
-                                    if (!roleManager.isRoleHeld(RoleManager.ROLE_HOME)) {
-                                        startActivityForResult(
-                                            roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME),
-                                            7101
-                                        )
-                                    } else {
-                                        startActivity(Intent(Settings.ACTION_HOME_SETTINGS))
-                                    }
-                                } else {
-                                    startActivity(Intent(Settings.ACTION_HOME_SETTINGS))
-                                }
-                            } else {
-                                startActivity(Intent(Settings.ACTION_HOME_SETTINGS))
-                            }
+                            openHomeAppSelector()
                             result.success(true)
                         } catch (e: Exception) {
                             try {
-                                startActivity(Intent(Settings.ACTION_SETTINGS))
+                                // Last-resort: open general Settings
+                                val fallback = Intent(Settings.ACTION_SETTINGS).apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                startActivity(fallback)
                                 result.success(true)
                             } catch (fallback: Exception) {
                                 result.error("HOME_SETTINGS", fallback.message, null)
@@ -49,5 +37,44 @@ class MainActivity : AudioServiceActivity() {
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    private fun openHomeAppSelector() {
+        // Prefer the modern RoleManager dialog on Android 10+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val roleManager = getSystemService(RoleManager::class.java)
+            if (roleManager != null && roleManager.isRoleAvailable(RoleManager.ROLE_HOME)) {
+                if (!roleManager.isRoleHeld(RoleManager.ROLE_HOME)) {
+                    val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    startActivity(intent)
+                    return
+                }
+            }
+        }
+
+        // Fallback that works on almost every OEM (Samsung, Xiaomi, etc.)
+        val homeSettings = Intent(Settings.ACTION_HOME_SETTINGS).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        try {
+            startActivity(homeSettings)
+            return
+        } catch (_: Exception) {
+            // Some devices don't expose ACTION_HOME_SETTINGS
+        }
+
+        // Final attempt: open the generic default-apps screen when available
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            val defaults = Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(defaults)
+        } else {
+            startActivity(Intent(Settings.ACTION_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            })
+        }
     }
 }

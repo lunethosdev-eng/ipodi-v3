@@ -14,19 +14,38 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int page = 0;
+  bool _openingHomeSettings = false;
 
   Future<void> _openHomeSettings() async {
+    if (_openingHomeSettings) return;
+    setState(() => _openingHomeSettings = true);
     try {
       final opened = await const MethodChannel('com.sekai.sekaipod/system')
           .invokeMethod<bool>('openHomeSettings');
       if (!mounted) return;
       if (opened != true) {
-        _showActionMessage('Android could not open the Home app selector.');
+        _showActionMessage(
+          'No se pudo abrir el selector de app de inicio.\n\n'
+          'Puedes hacerlo manualmente:\n'
+          'Ajustes → Apps → Apps predeterminadas → App de inicio → SekaiPod',
+        );
       }
     } on PlatformException catch (e) {
-      if (mounted) _showActionMessage('Could not open Home settings: ${e.message ?? 'unknown error'}');
+      if (mounted) {
+        _showActionMessage(
+          'No se pudo abrir el selector de inicio: ${e.message ?? 'error desconocido'}\n\n'
+          'Hazlo manualmente en Ajustes → Apps predeterminadas → App de inicio.',
+        );
+      }
     } catch (e) {
-      if (mounted) _showActionMessage('Could not open Home settings: $e');
+      if (mounted) {
+        _showActionMessage(
+          'No se pudo abrir el selector de inicio: $e\n\n'
+          'Hazlo manualmente en Ajustes → Apps predeterminadas → App de inicio.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _openingHomeSettings = false);
     }
   }
 
@@ -46,32 +65,60 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
+  Future<void> _openChooseSongs() async {
+    // Use named route + queryParameters so GoRouter always resolves correctly
+    // even when called from inside the DeviceFrame / ShellRoute.
+    try {
+      await context.pushNamed(
+        Routes.addMusic.name,
+        queryParameters: const {'onboarding': '1'},
+      );
+    } catch (e) {
+      if (!mounted) return;
+      _showActionMessage(
+        'No se pudo abrir la pantalla de canciones: $e\n\n'
+        'Prueba de nuevo o reinicia la app.',
+      );
+    }
+  }
+
   Future<void> _finish() async {
-    await ref.read(sharedPreferencesWithCacheProvider).requireValue.setBool('sekaipod.onboardingComplete', true);
+    await ref
+        .read(sharedPreferencesWithCacheProvider)
+        .requireValue
+        .setBool('sekaipod.onboardingComplete', true);
     if (mounted) context.goNamed(Routes.menu.name);
   }
 
   @override
   Widget build(BuildContext context) {
     final pages = [
-      _IntroPage(
+      const _IntroPage(
         icon: CupertinoIcons.music_note_2,
-        title: 'Welcome to SekaiPod',
-        text: 'A personal iPod-style launcher. You choose what belongs in your music library.',
+        title: 'Bienvenido a SekaiPod',
+        text:
+            'Un launcher estilo iPod personal. Tú eliges qué canciones van en tu biblioteca.',
       ),
       _IntroPage(
         icon: CupertinoIcons.house,
-        title: 'Make it your Home',
-        text: 'You can set SekaiPod as your Android Home app. You can also skip this and do it later.',
-        action: CupertinoButton.filled(onPressed: _openHomeSettings, child: const Text('Set default launcher')),
+        title: 'Ponlo como pantalla de inicio',
+        text:
+            'Puedes configurar SekaiPod como tu app de inicio de Android. También puedes saltarte este paso y hacerlo más tarde.',
+        action: CupertinoButton.filled(
+          onPressed: _openingHomeSettings ? null : _openHomeSettings,
+          child: _openingHomeSettings
+              ? const CupertinoActivityIndicator(color: CupertinoColors.white)
+              : const Text('Establecer launcher predeterminado'),
+        ),
       ),
       _IntroPage(
         icon: CupertinoIcons.music_albums,
-        title: 'Choose your music',
-        text: 'The Sekai Music catalog is only used for discovery. Only songs you add are saved to My Music.',
+        title: 'Elige tu música',
+        text:
+            'El catálogo de Sekai Music solo sirve para descubrir. Solo las canciones que agregues se guardan en Mi Música.',
         action: CupertinoButton.filled(
-          onPressed: () => context.push('/addMusic?onboarding=1'),
-          child: const Text('Choose songs'),
+          onPressed: _openChooseSongs,
+          child: const Text('Elegir canciones'),
         ),
       ),
     ];
@@ -83,19 +130,40 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             Expanded(child: pages[page]),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(pages.length, (i) => Padding(
-                padding: const EdgeInsets.all(5),
-                child: Container(width: 7, height: 7, decoration: BoxDecoration(shape: BoxShape.circle, color: i == page ? CupertinoColors.activeBlue : CupertinoColors.systemGrey4)),
-              )),
+              children: List.generate(
+                pages.length,
+                (i) => Padding(
+                  padding: const EdgeInsets.all(5),
+                  child: Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: i == page
+                          ? CupertinoColors.activeBlue
+                          : CupertinoColors.systemGrey4,
+                    ),
+                  ),
+                ),
+              ),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                CupertinoButton(onPressed: _finish, child: const Text('Skip')),
+                CupertinoButton(
+                  onPressed: _finish,
+                  child: const Text('Saltar'),
+                ),
                 if (page < pages.length - 1)
-                  CupertinoButton.filled(onPressed: () => setState(() => page++), child: const Text('Next'))
+                  CupertinoButton.filled(
+                    onPressed: () => setState(() => page++),
+                    child: const Text('Siguiente'),
+                  )
                 else
-                  CupertinoButton.filled(onPressed: _finish, child: const Text('Finish')),
+                  CupertinoButton.filled(
+                    onPressed: _finish,
+                    child: const Text('Terminar'),
+                  ),
               ],
             ),
           ],
@@ -111,7 +179,12 @@ class _IntroPage extends StatelessWidget {
   final String text;
   final Widget? action;
 
-  const _IntroPage({required this.icon, required this.title, required this.text, this.action});
+  const _IntroPage({
+    required this.icon,
+    required this.title,
+    required this.text,
+    this.action,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -123,10 +196,24 @@ class _IntroPage extends StatelessWidget {
           children: [
             Icon(icon, size: 76, color: CupertinoColors.activeBlue),
             const SizedBox(height: 24),
-            Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700)),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 14),
-            Text(text, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, color: CupertinoColors.secondaryLabel)),
-            if (action != null) ...[const SizedBox(height: 22), action!],
+            Text(
+              text,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 16,
+                color: CupertinoColors.secondaryLabel,
+              ),
+            ),
+            if (action != null) ...[
+              const SizedBox(height: 22),
+              action!,
+            ],
           ],
         ),
       ),
