@@ -13,4 +13,13 @@ android {
         versionCode 1
         versionName '1.0.0'
     }
+
+    buildTypes {
+        release {
+            // Sign the legacy release with the standard debug key so the APK is
+            // directly installable from GitHub Actions.
+            signingConfig signingConfigs.debug
+            minifyEnabled false
+        }
+    }
 }

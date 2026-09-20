@@ -38,9 +38,9 @@ class CustomizationScreen extends ConsumerWidget {
               spacing: 10,
               runSpacing: 10,
               children: colors.map((color) {
-                final selected = customization.accentColorValue == color.value;
+                final selected = customization.accentColorValue == color.toARGB32();
                 return GestureDetector(
-                  onTap: () => controller.setAccent(color.value),
+                  onTap: () => controller.setAccent(color.toARGB32()),
                   child: Container(
                     width: 38,
                     height: 38,

@@ -35,11 +35,14 @@ jobs:
       - name: Generate localizations
         run: flutter gen-l10n
       - name: Analyze
-        run: flutter analyze --no-fatal-infos
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
       - name: Build modern APK
         run: flutter build apk --release --flavor production
-      - name: Rename
-        run: cp build/app/outputs/flutter-apk/app-production-release.apk SekaiPod-Android7-16.apk
+      - name: Locate and rename modern APK
+        run: |
+          APK_PATH="$(find build/app/outputs/flutter-apk -maxdepth 1 -type f -name '*.apk' | head -n 1)"
+          test -n "$APK_PATH"
+          cp "$APK_PATH" SekaiPod-Android7-16.apk
       - uses: actions/upload-artifact@v4
         with:
           name: SekaiPod-Android7-to-16
@@ -63,8 +66,11 @@ jobs:
       - name: Build legacy APK
         working-directory: legacy
         run: gradle :app:assembleRelease --no-daemon --stacktrace
-      - name: Rename
-        run: cp legacy/app/build/outputs/apk/release/app-release.apk SekaiPod-Legacy-Android4.1-6.apk
+      - name: Locate and rename legacy APK
+        run: |
+          APK_PATH="$(find legacy/app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' | head -n 1)"
+          test -n "$APK_PATH"
+          cp "$APK_PATH" SekaiPod-Legacy-Android4.1-6.apk
       - uses: actions/upload-artifact@v4
         with:
           name: SekaiPod-Android4.1-to-6

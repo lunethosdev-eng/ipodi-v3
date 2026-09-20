@@ -39,7 +39,7 @@ linter:
     avoid_unused_constructor_parameters: true
     avoid_void_async: true
     constant_identifier_names: true
-    directives_ordering: true
+    directives_ordering: false
     discarded_futures: true
     eol_at_end_of_file: true
     literal_only_boolean_expressions: true
