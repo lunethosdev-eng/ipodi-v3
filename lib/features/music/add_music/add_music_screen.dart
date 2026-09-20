@@ -97,7 +97,31 @@ class _AddMusicScreenState extends ConsumerState<AddMusicScreen> {
     } else {
       await service.add(song);
     }
-    await _syncPlayer();
+
+    // The library selection is the primary action. Rebuilding the audio
+    // queue is secondary and must not make the button appear unresponsive.
+    try {
+      await _syncPlayer();
+    } catch (e) {
+      if (!mounted) return;
+      showCupertinoDialog<void>(
+        context: context,
+        builder: (_) => CupertinoAlertDialog(
+          title: const Text('Song saved'),
+          content: Text(
+            selected
+                ? 'The song was removed from My Music. The player could not refresh: $e'
+                : 'The song was added to My Music. The player could not refresh: $e',
+          ),
+          actions: [
+            CupertinoDialogAction(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   @override

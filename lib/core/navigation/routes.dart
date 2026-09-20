@@ -200,6 +200,7 @@ final routerProvider = Provider(
           GoRoute(
             path: Routes.addMusic.toString(),
             name: Routes.addMusic.name,
+            parentNavigatorKey: rootNavigatorKey,
             pageBuilder: (context, state) => CupertinoPage(
               child: AddMusicScreen(
                 fromOnboarding: state.uri.queryParameters['onboarding'] == '1',

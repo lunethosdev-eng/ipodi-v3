@@ -17,38 +17,33 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   Future<void> _openHomeSettings() async {
     try {
-      await const MethodChannel('com.sekai.sekaipod/system').invokeMethod('openHomeSettings');
-    } on PlatformException catch (error) {
+      final opened = await const MethodChannel('com.sekai.sekaipod/system')
+          .invokeMethod<bool>('openHomeSettings');
       if (!mounted) return;
-      showCupertinoDialog(
-        context: context,
-        builder: (_) => CupertinoAlertDialog(
-          title: const Text('Choose your Home app'),
-          content: Text('Android did not open the Home app selector. You can choose SekaiPod later in Settings.\n\n$error'),
-          actions: [
-            CupertinoDialogAction(
-              child: const Text('OK'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ],
-        ),
-      );
-    } catch (error) {
-      if (!mounted) return;
-      showCupertinoDialog(
-        context: context,
-        builder: (_) => CupertinoAlertDialog(
-          title: const Text('Could not open Home settings'),
-          content: Text('$error'),
-          actions: [
-            CupertinoDialogAction(
-              child: const Text('OK'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ],
-        ),
-      );
+      if (opened != true) {
+        _showActionMessage('Android could not open the Home app selector.');
+      }
+    } on PlatformException catch (e) {
+      if (mounted) _showActionMessage('Could not open Home settings: ${e.message ?? 'unknown error'}');
+    } catch (e) {
+      if (mounted) _showActionMessage('Could not open Home settings: $e');
     }
+  }
+
+  void _showActionMessage(String message) {
+    showCupertinoDialog<void>(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('SekaiPod'),
+        content: Text(message),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _finish() async {
@@ -75,7 +70,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         title: 'Choose your music',
         text: 'The Sekai Music catalog is only used for discovery. Only songs you add are saved to My Music.',
         action: CupertinoButton.filled(
-          onPressed: () => context.pushNamed(Routes.addMusic.name, queryParameters: const {'onboarding': '1'}),
+          onPressed: () => context.push('/addMusic?onboarding=1'),
           child: const Text('Choose songs'),
         ),
       ),
