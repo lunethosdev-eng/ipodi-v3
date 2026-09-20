@@ -22,7 +22,7 @@ class OfflineMusicService {
 
     final host = uri.host.toLowerCase();
     if (host.contains('youtube.com') || host.contains('youtu.be')) {
-      throw const UnsupportedError(
+      throw UnsupportedError(
         'Offline download needs a direct audio/stream URL. The catalog currently exposes a YouTube page URL for this item.',
       );
     }

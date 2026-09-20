@@ -68,8 +68,13 @@ jobs:
         run: gradle :app:assembleRelease --no-daemon --stacktrace
       - name: Locate and rename legacy APK
         run: |
-          APK_PATH="$(find legacy/app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' | head -n 1)"
-          test -n "$APK_PATH"
+          APK_PATH="$(find legacy/app/build/outputs/apk -type f -name '*.apk' | head -n 1)"
+          if [ -z "$APK_PATH" ]; then
+            echo "No legacy APK was produced. Output directory:"
+            find legacy/app/build/outputs -maxdepth 5 -type f -print || true
+            exit 1
+          fi
+          echo "Using legacy APK: $APK_PATH"
           cp "$APK_PATH" SekaiPod-Legacy-Android4.1-6.apk
       - uses: actions/upload-artifact@v4
         with:

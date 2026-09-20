@@ -1,9 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sekaipod/core/models/music_metadata.dart';
+import 'package:sekaipod/core/services/audio_files_service.dart';
 import 'package:sekaipod/core/services/audio_player_service.dart';
-import 'package:sekaipod/core/services/sekai_music_api.dart';
 import 'package:sekaipod/core/services/offline_music_service.dart';
+import 'package:sekaipod/core/services/sekai_music_api.dart';
 import 'package:sekaipod/features/music/album/providers/album_details_provider.dart';
 import 'package:sekaipod/features/music/artists/providers/artist_names_provider.dart';
 import 'package:sekaipod/features/music/genres/providers/genres_provider.dart';
@@ -210,7 +211,7 @@ class _CatalogSongTile extends StatelessWidget {
               ),
             ),
       title: Text(song.getTrackName, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text(song.getTrackArtistNames, maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Text(song.getTrackArtistNames ?? 'Unknown Artist', maxLines: 1, overflow: TextOverflow.ellipsis),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

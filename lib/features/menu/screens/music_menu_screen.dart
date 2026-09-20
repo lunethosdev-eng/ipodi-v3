@@ -4,7 +4,6 @@ import 'package:sekaipod/core/extensions/build_context_extensions.dart';
 import 'package:sekaipod/core/navigation/routes.dart';
 import 'package:sekaipod/core/widgets/display_list_tile.dart';
 import 'package:sekaipod/features/custom_screen_elements/custom_screen.dart';
-import 'package:sekaipod/features/menu/controller/split_screen_controller.dart';
 import 'package:sekaipod/features/status_bar/widgets/status_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
